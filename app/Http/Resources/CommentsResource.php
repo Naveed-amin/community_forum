@@ -15,6 +15,7 @@ class CommentsResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $this->whenLoaded('user') ?? '';
+
         return [
             'id' => $this->id,
             'content' => $this->content,
