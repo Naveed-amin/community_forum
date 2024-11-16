@@ -1,16 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, onMounted, reactive } from 'vue';
 
 const openModal = ref(false);
 const openShareModal = ref(false);
-
 const selectedPost = ref(null);
 const comment_input = reactive([]);
 const newComment = ref('');
-
+const shareComment = ref('');
 
 const props = defineProps({
     posts: {
@@ -24,48 +23,37 @@ const form = useForm({
     image: null,
 });
 
-
 function submitPost() {
-    form.post(route('posts.store'), form, {
-        onSuccess: handleCloseModal()
+    form.post(route('posts.store'), {
+        onSuccess: () => handleCloseModal(),
     });
 }
 
-// onMounted(() => {
-
-//     props.posts.forEach(() => {
-//         comment_input.push(false);
-//     });
-// });
+onMounted(() => {
+    props.posts.forEach(() => {
+        comment_input.push(false);
+    });
+});
 
 const toggleCommentBox = (index) => {
     comment_input[index] = !comment_input[index];
 };
 
 const addComment = (post) => {
-    axios.post(route('post.comment', post.id), {
-        comment: newComment.value,
-    })
+    if (!newComment.value.trim()) return console.error('Comment cannot be empty');
+    axios.post(route('post.comment', post.id), { comment: newComment.value })
         .then(response => {
             newComment.value = '';
-            if (response.data.comment) {
-                post.comments.push(response.data.comment);
-            }
+            if (response.data.comment) post.comments.push(response.data.comment);
         })
         .catch(error => {
             console.error('Error adding comment to the post:', error);
         });
 };
 
-
 const handleShare = () => {
-    axios.post(route('post.share', selectedPost.value), {
-        comment: comment.value,
-    })
-        .then(response => {
-            handleShareCloseModal();
-            console.log('Post shared successfully:', response.data);
-        })
+    axios.post(route('post.share', selectedPost.value), { comment: shareComment.value })
+        .then(() => handleShareCloseModal())
         .catch(error => {
             console.error('Error sharing the post:', error);
         });
@@ -96,58 +84,79 @@ const handleCloseModal = () => {
 
 const handleShareCloseModal = () => {
     openShareModal.value = false;
-    comment.value = '';
+    shareComment.value = '';
     selectedPost.value = null;
 };
 </script>
 
 <template>
-
     <Head title="Social Media" />
     <AuthenticatedLayout>
+        <!-- New Post Input -->
         <template #header>
-            <input type="text" @click="handleNewPostInputClick" placeholder="Create New Post..."
+            <input
+                type="text"
+                @click="handleNewPostInputClick"
+                placeholder="Create New Post..."
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                readonly>
+                readonly
+            >
         </template>
 
+        <!-- Posts Section -->
         <div class="py-12 flex justify-center">
             <div class="max-w-3xl w-full">
                 <div class="bg-white shadow-sm rounded-lg p-6">
                     <div v-for="(post, index) in posts" :key="post.id" class="border rounded-lg p-4 mb-6">
-                        <h2 class="text-center text-gray-700 font-medium mb-4" v-if="post.shared_content">{{
-                            post.shared_content
-                            }}</h2>
+                        <!-- Shared Content -->
+                        <h2
+                            v-if="post.shared_content"
+                            class="text-center text-gray-700 font-medium mb-4">
+                            {{ post.shared_content }}
+                        </h2>
                         <hr>
 
+                        <!-- Post Name -->
                         <h3 class="text-center text-gray-700 font-medium mb-4">{{ post.name }}</h3>
+
                         <!-- Post Image -->
                         <div class="flex justify-center mb-4">
-                            <img :src="`/storage/${post.image}`" alt="Post Image"
-                                class="w-full max-w-md rounded-md shadow-md">
+                            <img
+                                :src="`/storage/${post.image}`"
+                                alt="Post Image"
+                                class="w-full max-w-md rounded-md shadow-md"
+                            >
                         </div>
 
                         <!-- Action Buttons: Like, Comment, Share -->
                         <div class="flex justify-center space-x-6 mt-4">
-                            <button @click="handleLike(post)" class="text-blue-500 hover:text-blue-700 font-semibold">
+                            <button
+                                @click="handleLike(post)"
+                                class="text-blue-500 hover:text-blue-700 font-semibold">
                                 Like ({{ post.likes_count }})
                             </button>
-                            <button @click="toggleCommentBox(index)"
+                            <button
+                                @click="toggleCommentBox(index)"
                                 class="text-green-500 hover:text-green-700 font-semibold">
                                 Comment
                             </button>
-                            <button @click="handleSharePostInputClick(post)"
+                            <button
+                                @click="handleSharePostInputClick(post)"
                                 class="text-purple-500 hover:text-purple-700 font-semibold">
                                 Share ({{ post.shares_count }})
                             </button>
                         </div>
 
+                        <!-- Comments Section -->
                         <div class="mt-6">
                             <h4 class="text-gray-600 font-semibold mb-3">Comments:</h4>
                             <div v-if="post.comments && post.comments.length > 0" class="space-y-4">
-                                <div v-for="comment in post.comments" :key="comment.id"
-                                    class="border border-gray-300 rounded-lg p-3 bg-gray-50">
-                                    <p class="text-gray-800 font-semibold">{{ post.user_name }}</p>
+                                <div
+                                    v-for="comment in post.comments"
+                                    :key="comment.id"
+                                    class="border border-gray-300 rounded-lg p-3 bg-gray-50"
+                                >
+                                    <p class="text-gray-800 font-semibold">{{ comment.user_name }}</p>
                                     <p class="text-gray-600">{{ comment.content }}</p>
                                     <span class="text-gray-400 text-xs">{{ comment.created_at }}</span>
                                 </div>
@@ -156,27 +165,81 @@ const handleShareCloseModal = () => {
                         </div>
 
                         <!-- Comment Input -->
-                        <input v-if="comment_input[index]" type="text" v-model="newComment"
-                            @keyup.enter="addComment(post)" placeholder="Comment..."
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2">
+                        <input
+                            v-if="comment_input[index]"
+                            type="text"
+                            v-model="newComment"
+                            @keyup.enter="addComment(post)"
+                            placeholder="Comment..."
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mt-2"
+                        >
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- New Post Modal -->
-        <div v-if="openModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-                <!-- Modal Content Here -->
+        <div
+            v-if="openModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50"
+        >
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Create New Post</h3>
+                <form @submit.prevent="submitPost">
+                    <input
+                        v-model="form.name"
+                        type="text"
+                        placeholder="Post Title"
+                        class="w-full mb-4 border rounded-lg p-2"
+                    >
+                    <input
+                        type="file"
+                        @change="e => form.image = e.target.files[0]"
+                        class="w-full mb-4 border rounded-lg p-2"
+                    >
+                    <button
+                        type="submit"
+                        class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                        Submit
+                    </button>
+                    <button
+                        @click="handleCloseModal"
+                        type="button"
+                        class="ml-2 bg-gray-300 text-black px-4 py-2 rounded-lg">
+                        Cancel
+                    </button>
+                </form>
             </div>
         </div>
 
         <!-- Share Post Modal -->
-        <div v-if="openShareModal"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
-                <!-- Share Modal Content Here -->
+        <div
+            v-if="openShareModal"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-gray-800 bg-opacity-50"
+        >
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Share Post</h3>
+                <textarea
+                    v-model="shareComment"
+                    rows="4"
+                    class="w-full mb-4 border rounded-lg p-2"
+                    placeholder="Add a comment..."
+                ></textarea>
+                <div class="flex justify-end">
+                    <button
+                        @click="handleShare"
+                        class="bg-purple-500 text-white px-4 py-2 rounded-lg">
+                        Share
+                    </button>
+                    <button
+                        @click="handleShareCloseModal"
+                        type="button"
+                        class="ml-2 bg-gray-300 text-black px-4 py-2 rounded-lg">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+

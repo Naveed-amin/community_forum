@@ -17,8 +17,8 @@ class PostsController extends Controller
     public function index()
     {
         $posts = Post::withAll()->withChildrens()->latest()->get();
+        // dd($posts);
         $posts = PostsResource::collection($posts);
-
         return Inertia::render('Dashboard', [
             'posts' => $posts,
         ]);
@@ -128,6 +128,7 @@ class PostsController extends Controller
             'user_id' => auth()->id(),
             'content' => $request->comment,
         ]);
+        $comment = $comment->withAll()->find($comment->id);
 
         $comment = new CommentsResource($comment);
         return response()->json(['comment' => $comment]);

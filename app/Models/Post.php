@@ -21,7 +21,9 @@ class Post extends Model
 
     public function scopeWithChildrens($query)
     {
-        $query->with(['likes','shares','comments']);
+        $query->with(['likes','shares'])->with('comments',function($query){
+            $query->withAll();
+        });
     }
     public function user()
     {
