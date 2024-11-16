@@ -13,9 +13,11 @@ class Comment extends Model
         $q->with('user')->with('post');
     }
 
-    public function scopeWithChildrens($q)
+    public function scopeWithChildrens($query)
     {
-        $q->with('replies');
+        $query->with('replies',function($q){
+            $q->with('user');
+        });
     }
     public function replies()
     {

@@ -148,21 +148,57 @@ const handleShareCloseModal = () => {
                         </div>
 
                         <!-- Comments Section -->
-                        <div class="mt-6">
-                            <h4 class="text-gray-600 font-semibold mb-3">Comments:</h4>
-                            <div v-if="post.comments && post.comments.length > 0" class="space-y-4">
-                                <div
-                                    v-for="comment in post.comments"
-                                    :key="comment.id"
-                                    class="border border-gray-300 rounded-lg p-3 bg-gray-50"
-                                >
-                                    <p class="text-gray-800 font-semibold">{{ comment.user_name }}</p>
-                                    <p class="text-gray-600">{{ comment.content }}</p>
-                                    <span class="text-gray-400 text-xs">{{ comment.created_at }}</span>
-                                </div>
-                            </div>
-                            <p v-else class="text-gray-500 text-sm">No comments yet. Be the first to comment!</p>
+                       <div class="mt-6">
+    <h4 class="text-gray-700 font-bold text-lg mb-4 border-b pb-2 border-gray-200">
+        Comments
+    </h4>
+
+    <div v-if="post.comments && post.comments.length > 0" class="space-y-6">
+        <!-- Main comment -->
+        <div
+            v-for="comment in post.comments"
+            :key="comment.id"
+            class="border border-gray-200 rounded-lg p-4 shadow-sm bg-white"
+        >
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white text-lg">
+                    {{ comment.user_name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                    <p class="text-gray-900 font-medium">{{ comment.user_name }}</p>
+                    <span class="text-gray-400 text-sm">{{ comment.created_at }}</span>
+                </div>
+            </div>
+            <p class="text-gray-700 leading-relaxed">{{ comment.content }}</p>
+
+            <!-- Replies -->
+            <div v-if="comment.replies && comment.replies.length > 0" class="mt-4 pl-6 border-l-2 border-gray-200">
+                <h5 class="text-gray-600 text-sm font-semibold mb-2">Replies:</h5>
+                <div
+                    v-for="reply in comment.replies"
+                    :key="reply.id"
+                    class="border border-gray-100 rounded-lg p-3 bg-gray-50"
+                >
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white text-sm">
+                            {{ reply.user_name }}
                         </div>
+                        <div>
+                            <p class="text-gray-800 font-medium">{{ reply.user_name }}</p>
+                            <span class="text-gray-400 text-xs">{{ reply.created_at }}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 leading-relaxed">{{ reply.content }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p v-else class="text-gray-500 text-sm text-center mt-4">
+        No comments yet. Be the first to comment!
+    </p>
+</div>
+
 
                         <!-- Comment Input -->
                         <input

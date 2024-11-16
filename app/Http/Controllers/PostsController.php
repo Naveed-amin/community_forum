@@ -128,7 +128,7 @@ class PostsController extends Controller
             'user_id' => auth()->id(),
             'content' => $request->comment,
         ]);
-        $comment = $comment->withAll()->find($comment->id);
+        $comment = $comment->withAll()->withChildrens()->find($comment->id);
 
         $comment = new CommentsResource($comment);
         return response()->json(['comment' => $comment]);

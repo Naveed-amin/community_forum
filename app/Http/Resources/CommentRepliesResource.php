@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CommentsResource extends JsonResource
+class CommentRepliesResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,14 +15,14 @@ class CommentsResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $user = $this->whenLoaded('user') ? $this->whenLoaded('user') : null;
-        $replies = $this->whenLoaded('replies')? $this->whenLoaded('replies') : null;
+        // $user = $this->whenLoaded('user') ? $this->whenLoaded('user') : null;
 
-        // dd($user);
+        $user = User::findOrFail($this->user_id);
+
         return [
             'id' => $this->id,
             'parent_id' => $this->parent_id,
-            'replies' => $this->replies ? CommentRepliesResource::collection($this->replies) : null,
+            'replies' => $this->replies,
             'content' => $this->content,
             'user_id' => $this->user_id,
             'user_name' => $user ? $user->name : null,
